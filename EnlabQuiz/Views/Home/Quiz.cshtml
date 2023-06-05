@@ -1,0 +1,97 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="main-content">
+    <div id="question-number"></div>
+    <div id="question-text"></div>
+    <div id="answer">
+     
+    </div>
+    <button class="btn btn-submit" onclick="submitQuestion()" disabled>Submit</button>
+    <button class="btn btn-next" style="display:none" onclick="nextQuestion()">Next</button>
+</div>
+
+@section scripts {
+    <script defer>
+       let quizlist;
+       let currentIndex = 0;
+       let playQuiz;
+
+        initScript()
+       async function initScript(){
+            await startTime();
+            await getQuizList();
+       }
+
+       async function startTime(){
+            playQuiz = await fetchAPI('PlayQuizs', 'POST', {})
+
+            console.log(playQuiz)
+       }
+
+       async function getQuizList() {
+           quizlist = await fetchAPI('Quizs')
+            console.log(quizlist[0])
+            displayQuiz()
+            
+       }
+       
+
+       function displayQuiz(){
+            $('#question-text').text(quizlist[currentIndex].question)
+            const answers = JSON.parse(quizlist[currentIndex].answer).map(answer => {
+                return `
+                                    <div class="btn btn-answer" onclick="addActiveChoice(this)">${answer}</div>
+                        `
+            }).join('')
+
+            $('#answer').html(answers)
+       }
+
+       function addActiveChoice(elem){
+           $('.btn-answer').removeClass('active')
+           elem.classList.add('active')
+            if ($('.btn-answer.active').length===1){
+                $('.btn-submit').removeAttr('Disabled')
+            }
+       }
+
+        async function submitQuestion(){
+            
+            if ($('.btn-answer.active').text() == quizlist[currentIndex].correct){
+                
+                $('.btn-answer.active').addClass('right-answer')
+                $('.btn-submit').hide()
+                $('.btn-next').show()
+            }else {
+                $('.btn-answer.active').addClass('wrong-answer')
+                $('.btn-submit').hide()
+                $('.btn-next').show()
+            }
+            
+            const formData = {
+                PlayId: playQuiz.id,
+                QuizId: quizlist[currentIndex].id,
+                Choice: $('.btn-answer.active').text()
+            }
+            console.log(formData)
+            await fetchAPI('HistoryPlays', 'POST', formData)
+        }
+        let result;
+        async function nextQuestion(){
+         
+            if (currentIndex+1 < quizlist.length){
+                currentIndex += 1;
+                displayQuiz();
+                $('.btn-next').hide()
+                $('.btn-submit').show()
+                $('.btn-submit').attr('disabled','true')
+            }else {
+                console.log('ket thuc')
+                result = await fetchAPI(`PlayQuizs/${playQuiz.id}`)
+                console.log(result)
+            }
+
+        }
+    </script>
+}

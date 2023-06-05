@@ -1,0 +1,90 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+    background-color: #26294B;
+    color:white;
+}
+
+.main-content {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.btn-start {
+    color:white;
+    background-color: #D01624;
+    width: 130px;
+    border-radius:25px;
+}
+#logo{
+
+    margin-bottom:30px
+}
+
+#question-text{
+    font-size:15px;
+    font-weight:bold;
+}
+
+.btn-answer {
+    color: white;
+    border-color:white;
+    border-radius: 25px;
+    padding: 10px 100px;
+    text-align:center;
+}
+#answer{
+    display:flex;
+    flex-direction: column;
+    margin-top:50px;
+}
+.btn-answer:hover {
+    background-color: white;
+    color: black;
+}
+.btn-answer.active {
+    background-color: white;
+    color: black;
+}
+
+#answer .btn-answer {
+    margin-bottom: 20px;
+}
+.btn-next,
+.btn-submit {
+    background-color: #D01624;
+    padding: 8px;
+    border-radius: 25px;
+    width: 120px;
+    color: white;
+}
+
+    .btn-submit[disabled] {
+        color:white;
+        background-color: #9E9E9E;
+    }
+.right-answer {
+    background-color: #05AA6D !important;
+}
+.wrong-answer {
+    background-color: #D01624 !important;
+}
