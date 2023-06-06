@@ -18,11 +18,11 @@ async function fetchAPI(ApiController, method, formData) {
     return data
 }
 
-async function CallProcedure(procName) {
+async function CallProcedure(procName,formData) {
 
     const url = `https://localhost:7156/CallProcedure/${procName}`
-    const res = await fetch(url, { method: 'POST', headers: { "Content-Type": "application/json" } })
-
+    const res = await fetch(url, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) })
+    console.log(res)
     const data = await res.json();
 
     return data

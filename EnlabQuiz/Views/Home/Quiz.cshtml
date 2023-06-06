@@ -1,14 +1,30 @@
 ﻿@{
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
 <div class="main-content">
-    <div id="question-number"></div>
-    <div id="question-text"></div>
-    <div id="answer">
-     
+    <div id="play-quiz-block">
+        <div id="question-number"></div>
+        <div id="question-text"></div>
+        <div id="answer">
+        </div>
+        <button class="btn btn-submit" onclick="submitQuestion()" disabled>Submit</button>
+        <button class="btn btn-next" style="display:none" onclick="nextQuestion()">Next</button>
     </div>
-    <button class="btn btn-submit" onclick="submitQuestion()" disabled>Submit</button>
-    <button class="btn btn-next" style="display:none" onclick="nextQuestion()">Next</button>
+    <div id="modal-result" style="display:none">
+       <div id="result">
+           
+       </div>
+       
+    </div>
+    <div id="modal-history" style="display:none">
+        <div style="color:black">Wrong answer</div>
+        <div id="history-play">
+           
+            
+        </div>
+        <span id="closeBtn" onclick="closeModalHistory()"><img src="~/img/close.png" style="width:15px"/></span>
+    </div>
 </div>
 
 @section scripts {
@@ -26,7 +42,6 @@
        async function startTime(){
             playQuiz = await fetchAPI('PlayQuizs', 'POST', {})
 
-            console.log(playQuiz)
        }
 
        async function getQuizList() {
@@ -38,10 +53,11 @@
        
 
        function displayQuiz(){
-            $('#question-text').text(quizlist[currentIndex].question)
+            $('#question-number').html(`<b>Question ${currentIndex + 1}</b>/<small>${quizlist.length}</small>`)
+            $('#question-text').html(quizlist[currentIndex].question)
             const answers = JSON.parse(quizlist[currentIndex].answer).map(answer => {
                 return `
-                                    <div class="btn btn-answer" onclick="addActiveChoice(this)">${answer}</div>
+                                            <div class="btn btn-answer" onclick="addActiveChoice(this)"><span>${answer}</span></div>
                         `
             }).join('')
 
@@ -74,12 +90,11 @@
                 QuizId: quizlist[currentIndex].id,
                 Choice: $('.btn-answer.active').text()
             }
-            console.log(formData)
+            //console.log(formData)
             await fetchAPI('HistoryPlays', 'POST', formData)
         }
-        let result;
+        let result,arrHistory
         async function nextQuestion(){
-         
             if (currentIndex+1 < quizlist.length){
                 currentIndex += 1;
                 displayQuiz();
@@ -87,11 +102,116 @@
                 $('.btn-submit').show()
                 $('.btn-submit').attr('disabled','true')
             }else {
-                console.log('ket thuc')
-                result = await fetchAPI(`PlayQuizs/${playQuiz.id}`)
-                console.log(result)
-            }
+                $('.btn-next').hide()
+                $('.btn-submit').show()
+                $('.btn-submit').attr('disabled', 'true')
+                //console.log('ket thuc')
+                const formData = { PlayId: playQuiz.id }
+                result = await CallProcedure(`EndPlay`, formData)
 
+                arrHistory = JSON.parse(result[0].Choice)
+
+                console.log(result)
+                console.log(arrHistory)
+
+                let totalQuestion = 0;
+                let totalRightAnswer=0;
+                arrHistory.map(x => {
+                    totalQuestion +=1
+                    if (parseInt(x.IsCorrect) === 1){
+                        totalRightAnswer+=1
+                    }
+                })
+
+
+                const startTime = new Date(result[0].StartTime);
+                const endTime = new Date(result[0].EndTime);
+
+                const timeDiff = (endTime - startTime)/1000
+
+                const minutes = Math.floor(timeDiff / 60);
+                const seconds = timeDiff % 60;
+                let modalTitle = "Congratulations!!"
+                let modalContent = "You are amazing!!"
+                let imgSource = "/img/congrats.png"
+                if (totalRightAnswer < totalQuestion/2){
+                    modalTitle = "Completed!"
+                    modalContent = "Better luck next time!"
+                    imgSource = "/img/retry.jpg"
+                }
+
+                $('#result').html(` <div class="image-wrap">
+                                <img src="${imgSource}" />
+                    </div>
+                    <div class="modal-title">
+                                ${modalTitle}
+                    </div>
+                    <div class="modal-content">
+                                <div>${modalContent}</div>
+                                                <div>${totalRightAnswer}/${totalQuestion} correct answers in ${minutes} minute${(minutes > 2) ? 's' : ''} ${seconds.toFixed(2)} seconds</div>
+                    </div>
+                    <div>
+                        <button class="btn btn-play-again" onclick="playAgain()">
+                            Play Again
+                        </button>
+                        <button class="btn btn-view-answer" onclick="viewAnswers()">
+                            View answers
+                        </button>
+                    </div>`)
+
+                let html = ''
+                arrHistory.map(history => {
+
+                    arrAnswers = JSON.parse(history.Answer)
+                    if (parseInt(history.IsCorrect) === 0) {
+                        html += `
+                                 <div>
+                                                        <div class="history-quest">${history.Question}</div>
+                                        <div class="history-answer">
+                                            ${arrAnswers.map(y => {
+                            let check = ''
+                            if (y == history.Correct) {
+                                check = 'right-answer'
+                            }
+                            else if (y == history.Choice) {
+                                check = 'wrong-answer'
+                            }
+                            return `<div class="btn btn-answer ${check}">${y}</div>`
+                        }).join('')}
+                                    </div>
+
+                                </div>`
+                    }
+
+                })
+                if(html.length>0){
+                    $('#history-play').html(html)
+                }
+
+
+                $('#play-quiz-block').hide()
+                $('#modal-result').show()
+
+
+
+            }
+        }
+        function playAgain(){
+            currentIndex = 0
+            initScript()
+            $('#history-play').html('')
+            $('#modal-result').hide()
+            $('#play-quiz-block').show()
+        }
+
+        function viewAnswers() {
+
+           
+            $('#modal-history').show()
+        }
+
+        function closeModalHistory(){
+            $('#modal-history').hide()
         }
     </script>
 }
